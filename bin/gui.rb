@@ -86,7 +86,7 @@ def get
     Zhua.xia(aid, save_path, debug)
     $result.value = "crawled successed"    
     p "---------end get -----------"    
-    puts "url is #$aid"
+    puts "url is #$aid" if debug
   rescue 
     $result.value = 'crawl failed'
     puts "error\n#{$!}:\n#{$!.backtrace.join("\n")}"    
