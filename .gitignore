@@ -24,7 +24,6 @@ sphinx_index/*
 config.ru
 tmp/*
 src/*
-test/*
 #Windows
 *.svn
 .bundle/
