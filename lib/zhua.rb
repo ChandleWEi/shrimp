@@ -8,11 +8,12 @@ require 'iconv'
 
 module Zhua
 
-  def self.crawl(path, tg, tmp_path, os, wget_cmd = 'wget', debug = true)
+  def self.crawl(path, tg, tmp_path, os, wget_cmd = 'wget', debug = false)
     puts "tag is #{tg}" rescue nil if debug
     puts "tag class is #{tg.class}" rescue nil if debug    
     if !(File.exist? path) && !tg.nil? && !tg.empty?
       p "#self crawl path is " + path if debug
+      p "os is " + os if debug
       if os == "windows"
         puts "1 tmp_path is #{tmp_path}" if debug        
         # tmp_path = tmp_path + (rand(1000) + rand(500)).to_s + File.basename(tg)[/\.\w+/, 0]
@@ -58,7 +59,7 @@ module Zhua
     case RUBY_PLATFORM  
     when /ix/i, /ux/i, /gnu/i,  
       /sysv/i, /solaris/i,  
-      /sunos/i, /bsd/i  
+      /sunos/i, /bsd/i, /darwin/i
       "unix"  
     when /win/i, /ming/i  
       "windows"  
@@ -68,18 +69,14 @@ module Zhua
   end  
 
   
-  def xia(aid = '6648309', save_path = '/Users/chandle/Downloads/xiami/', type = '0', debug = true)
-    os = self.os_family
-    win_to_code = 'GBK//IGNORE'
-    win_from_code = 'UTF-8//IGNORE'    
-    wget_cmd = "wget"
+  def xia(aid = '6648309', save_path = '/Users/chandle/Downloads/xiami/', type = '0', debug = false)
+    begin 
 
-    case self.os_family
-    when 'windows'
-      wget_cmd = "wget.exe"
-    else
-      wget_cmd = "wget"
-    end
+      os = self.os_family
+      p "os is #{os}"
+    # win_to_code = 'GBK//IGNORE'
+    # win_from_code = 'UTF-8//IGNORE'    
+    wget_cmd = "wget"
     
     music_path = save_path || "/Users/chandle/Downloads/xiami/"
     FileUtils.mkdir_p music_path unless File.exists? music_path
@@ -99,15 +96,22 @@ module Zhua
         music['picurl'] = $1 if x =~ /^<pic>(.*)<\/pic>$/
         music['lyric'] = $1 if x =~ /^<lyric>(.*)<\/lyric>$/
         # 一次循环
+
         unless music['picurl'].nil?
-          musics << music
+          self.process_music(music, music_path, os)          
+          # musics << music
           puts music if debug
           music = {}
         end
       end
-    end
+      end
+    rescue
+      p "xia error is #$!"
+    end      
+  end
 
-    musics.each do |music|
+
+  def self.process_music(music, music_path, os, debug = false)
       p "____________________--------------------" if debug
       title = music['title']
       p "title is " + title if debug
@@ -201,6 +205,12 @@ module Zhua
       FileUtils.cp(mp3_path, itunes_path)
       p "mp3info now start finished"
     end      
-  end
+
+
+
+
+
+
+  
   module_function :xia  
 end
