@@ -205,7 +205,7 @@ module Zhua
     itunes_path = "#{music_path}itunes"
     FileUtils.mkdir_p itunes_path unless File.exists? itunes_path
     FileUtils.cp(mp3_path, itunes_path)
-    p "mp3info now start finished"
+    p "mp3info now  finished"
   end      
 
 
