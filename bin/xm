@@ -1,4 +1,4 @@
-# # -*- coding: utf-8 -*-
+#!/usr/bin/env ruby
 $:.unshift File.join(File.dirname(__FILE__),'..','gems/parseconfig-0.5.2/lib')
 require 'parseconfig'
 $:.unshift File.join(File.dirname(__FILE__),'..','lib')
