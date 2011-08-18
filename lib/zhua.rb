@@ -69,41 +69,44 @@ module Zhua
   end  
 
   
-  def xia(aid = '6648309', save_path = '/Users/chandle/Downloads/xiami/', type = '0', debug = false)
+  def xia(aid = '6648309', save_path = '/Users/chandle/Downloads/shrimp/', type = '0', debug = false)
     begin 
 
+      shrimp = 'x' + 'i' + 'a' + 'm' + 'i'
       os = self.os_family
       p "os is #{os}"
-    # win_to_code = 'GBK//IGNORE'
-    # win_from_code = 'UTF-8//IGNORE'    
-    wget_cmd = "wget"
-    
-    music_path = save_path || "/Users/chandle/Downloads/xiami/"
-    FileUtils.mkdir_p music_path unless File.exists? music_path
-    p music_path if debug
-    url = "http://www.xiami.com/song/playlist/id/#{aid}/type/#{type}";
-    song_path = "#{music_path}song.xml"
-    system("#{wget_cmd} #{url} -O #{song_path}");
-    musics = []
-    music = {}
+      # win_to_code = 'GBK//IGNORE'
+      # win_from_code = 'UTF-8//IGNORE'    
+      wget_cmd = "wget"
+      
+      music_path = save_path || "/Users/chandle/Downloads/shrimp/"
+      FileUtils.mkdir_p music_path unless File.exists? music_path
+      p music_path if debug
+      url = "http://www.#{shrimp}.com/s" + "ong/play" + "list/i" + "d/#{aid}/type/#{type}";
+      song_path = "#{music_path}song.xml"
+      system("#{wget_cmd} #{url} -O #{song_path}");
+      musics = []
+      music = {}
 
-    open(song_path) do |f|
-      f.each do |x|
-        music['title'] = $1 if x =~ /^<title>/ && x =~ /\[([^\[\]]+)\]/
-        music['loc'] = Loc.decode($1, debug)    if x =~ /^<location>(.*)<\/location>$/
-        music['album'] = $1 if x =~ /^<album_name>/ && x =~ /\[([^\[\]]+)\]/
-        music['artist'] = $1 if x =~ /^<artist>(.*)<\/artist>$/
-        music['picurl'] = $1 if x =~ /^<pic>(.*)<\/pic>$/
-        music['lyric'] = $1 if x =~ /^<lyric>(.*)<\/lyric>$/
-        # 一次循环
+      open(song_path) do |f|
+        f.each do |x|
+          music['title'] = $1 if x =~ /^<title>/ && x =~ /\[([^\[\]]+)\]/
+          music['loc'] = Loc.decode($1, debug)    if x =~ /^<location>(.*)<\/location>$/
+          music['album'] = $1 if x =~ /^<album_name>/ && x =~ /\[([^\[\]]+)\]/
+          music['artist'] = $1 if x =~ /^<artist>(.*)<\/artist>$/
+          music['picurl'] = $1 if x =~ /^<pic>(.*)<\/pic>$/
+          music['lyric'] = $1 if x =~ /^<lyric>(.*)<\/lyric>$/
+          # 一次循环
 
-        unless music['picurl'].nil?
-          self.process_music(music, music_path, os)          
-          # musics << music
-          puts music if debug
-          music = {}
+          next if music['album'].nil? || music['album'].empty? || music['artist'].nil? || music['artist'].empty?
+
+          unless music['picurl'].nil?
+            self.process_music(music, music_path, os)          
+            # musics << music
+            puts music if debug
+            music = {}
+          end
         end
-      end
       end
     rescue
       p "xia error is #$!"
@@ -112,99 +115,98 @@ module Zhua
 
 
   def self.process_music(music, music_path, os, debug = false)
-      p "____________________--------------------" if debug
-      title = music['title']
-      p "title is " + title if debug
-      loc = music['loc']
-      p "loc is " + loc if debug
-      album = music['album']
-      p "album is " + album if debug
-      artist = music['artist']
-      p "artist is " + artist  if debug
-      picurl = music['picurl']
-      p "picurl is " + picurl    if debug
-      lyric = music['lyric']
-      p "lyric is " + lyric    if debug  
-      paths = []
+    p "____________________--------------------" if debug
+    title = music['title']
+    p "title is " + title if debug
+    loc = music['loc']
+    p "loc is " + loc if debug
+    album = music['album']
+    p "album is " + album if debug
+    artist = music['artist']
+    p "artist is " + artist  if debug
+    picurl = music['picurl']
+    p "picurl is " + picurl    if debug
+    lyric = music['lyric']
+    p "lyric is " + lyric    if debug  
+    paths = []
 
-      album_path = "#{music_path}#{artist}/#{album}".strip.to_s
-      tmp_path = "#{music_path}tmp/".to_s      
-      album_path_orig = album_path.dup
-      if os == 'windows'
-        album_path = self.win_encode(album_path)
-      end
-      # album_path = shellescape(album_path)
-      # album_path = Escape.shell_command(album_path)  
-      paths << album_path
-      paths << tmp_path
-      puts "tmp_path_is #{tmp_path}" if debug
-      puts tmp_path if debug      
-      puts "album_is" if debug
-      puts album_path if debug
-      paths.each do |path|
-        FileUtils.mkdir_p path unless File.exists? path
-      end
-      # out = "2>/dev/null"
-      out = ""
-      # 获取mp3
-      # mp3_path  = "#{album_path}/#{shellescape title}.mp3"
-      mp3_path  = "#{album_path_orig}/#{title}.mp3"      
-      if os == 'windows'
-        mp3_path = self.win_encode(mp3_path)
-      end      
-      self.crawl(mp3_path, loc, tmp_path, os)
-      
-      # 获取图片
-      # img_path  = "#{album_path}/#{shellescape title}.jpg"
-      img_path  = "#{album_path_orig}/#{title}.jpg"
-      if os == 'windows'
-        img_path = self.win_encode(img_path)
-      end
-
-      self.crawl(img_path, picurl, tmp_path, os)
-      
-      # 获取歌词
-      # http://img.xiami.com/./lyric/upload/34/383434_1298475733.lrc
-      lrc_path  = "#{album_path_orig}/#{title}.lrc"
-      if os == 'windows'
-        lrc_path = self.win_encode(lrc_path)
-      end
-      self.crawl(lrc_path, lyric, tmp_path, os)      
-
-      p "mp3info now start update"
-      puts "mp3_path is #{mp3_path}" if debug
-      Mp3Info.open(mp3_path, :encoding => 'utf-8') do |mp3|
-        mp3.tag.title = title 
-        mp3.tag.artist = artist
-        mp3.tag.album = album
-        img_file = open(img_path)    
-        unless img_file.nil?
-          mp3.tag2.APIC = "\000image/jpeg\000\000\000" + img_file.read
-          img_file.close
-        end
-        # TODO
-        # lrc_file = open(lrc_path)    
-        # unless lrc_file.nil?
-        # p "lrc_file is not nil"
-        # # data = lrc_file.read
-        # data = "我"
-        # first = "\001eng\377\376\000\000\377\376"
-        # # first = "\305\245\346\271\247\000"
-        # last = "\000\000"
-        # # data = first + data + last
-        # data = Iconv.iconv('utf-16', 'utf-8', data).first
-        # mp3.tag2.USLT = first + data[3, data.size] + last
-        # # mp3.tag.LYRICS = data
-        # # mp3.tag2.SYLT = data      
-        # data = nil
-        # lrc_file.close
-        # end
-      end
-      itunes_path = "#{music_path}itunes"
-      FileUtils.mkdir_p itunes_path unless File.exists? itunes_path
-      FileUtils.cp(mp3_path, itunes_path)
-      p "mp3info now start finished"
+    album_path = "#{music_path}#{artist}/#{album}".strip.to_s
+    tmp_path = "#{music_path}tmp/".to_s      
+    album_path_orig = album_path.dup
+    if os == 'windows'
+      album_path = self.win_encode(album_path)
+    end
+    # album_path = shellescape(album_path)
+    # album_path = Escape.shell_command(album_path)  
+    paths << album_path
+    paths << tmp_path
+    puts "tmp_path_is #{tmp_path}" if debug
+    puts tmp_path if debug      
+    puts "album_is" if debug
+    puts album_path if debug
+    paths.each do |path|
+      FileUtils.mkdir_p path unless File.exists? path
+    end
+    # out = "2>/dev/null"
+    out = ""
+    # 获取mp3
+    # mp3_path  = "#{album_path}/#{shellescape title}.mp3"
+    mp3_path  = "#{album_path_orig}/#{title}.mp3"      
+    if os == 'windows'
+      mp3_path = self.win_encode(mp3_path)
     end      
+    self.crawl(mp3_path, loc, tmp_path, os)
+    
+    # 获取图片
+    # img_path  = "#{album_path}/#{shellescape title}.jpg"
+    img_path  = "#{album_path_orig}/#{title}.jpg"
+    if os == 'windows'
+      img_path = self.win_encode(img_path)
+    end
+
+    self.crawl(img_path, picurl, tmp_path, os)
+    
+    # 获取歌词
+    lrc_path  = "#{album_path_orig}/#{title}.lrc"
+    if os == 'windows'
+      lrc_path = self.win_encode(lrc_path)
+    end
+    self.crawl(lrc_path, lyric, tmp_path, os)      
+
+    puts  "mp3info now start update #{mp3_path}"
+    puts "mp3_path is #{mp3_path}" if debug
+    Mp3Info.open(mp3_path, :encoding => 'utf-8') do |mp3|
+      mp3.tag.title = title 
+      mp3.tag.artist = artist
+      mp3.tag.album = album
+      img_file = open(img_path)    
+      unless img_file.nil?
+        mp3.tag2.APIC = "\000image/jpeg\000\000\000" + img_file.read
+        img_file.close
+      end
+      # TODO
+      # lrc_file = open(lrc_path)    
+      # unless lrc_file.nil?
+      # p "lrc_file is not nil"
+      # # data = lrc_file.read
+      # data = "我"
+      # first = "\001eng\377\376\000\000\377\376"
+      # # first = "\305\245\346\271\247\000"
+      # last = "\000\000"
+      # # data = first + data + last
+      # data = Iconv.iconv('utf-16', 'utf-8', data).first
+      # mp3.tag2.USLT = first + data[3, data.size] + last
+      # # mp3.tag.LYRICS = data
+      # # mp3.tag2.SYLT = data      
+      # data = nil
+      # lrc_file.close
+      # end
+    end
+    itunes_path = "#{music_path}itunes"
+    FileUtils.mkdir_p itunes_path unless File.exists? itunes_path
+    FileUtils.cp(mp3_path, itunes_path)
+    p "mp3info now start finished"
+  end      
 
 
 

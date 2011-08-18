@@ -16,11 +16,11 @@ describe Zhua do
       conf = File.join(File.dirname(__FILE__),'..','conf')
       conf_f = "#{conf}/setup.conf"
       config = ParseConfig.new(conf_f)
-      save_path = "c:\\xiami"      
+      save_path = "c:\\shrimp"      
       Zhua::save_conf({:save_path => save_path, :conf_path => conf_f})
       config = ParseConfig.new(conf_f)      
       config.get_value('save_path').should == save_path
-      save_path = '/Users/chandle/Downloads/xiami/'
+      save_path = '/Users/chandle/Downloads/shrimp/'
       Zhua::save_conf({:save_path => save_path, :conf_path => conf_f})
       config = ParseConfig.new(conf_f)      
       config.get_value('save_path').should == save_path      
