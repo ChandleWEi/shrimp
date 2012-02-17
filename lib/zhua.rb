@@ -93,7 +93,16 @@ module Zhua
           music['title'] = $1 if x =~ /^<title>/ && x =~ /\[([^\[\]]+)\]/
           music['loc'] = Loc.decode($1, debug)    if x =~ /^<location>(.*)<\/location>$/
           music['album'] = $1 if x =~ /^<album_name>/ && x =~ /\[([^\[\]]+)\]/
-          music['artist'] = $1 if x =~ /^<artist>(.*)<\/artist>$/
+
+          if x =~ /^<artist>(.*)<\/artist>$/
+            tmp_data = $1
+            if tmp_data =~ /CDATA/
+              music['artist'] = $1 if tmp_data =~ /<!\[CDATA\[(.*)\]\]>/
+            else
+              music['artist'] = tmp_data                          
+            end
+            
+          end
           music['picurl'] = $1 if x =~ /^<pic>(.*)<\/pic>$/
           music['lyric'] = $1 if x =~ /^<lyric>(.*)<\/lyric>$/
           # 一次循环
