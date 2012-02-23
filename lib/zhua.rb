@@ -37,7 +37,8 @@ module Zhua
   def self.win_encode(str, win_to_code = 'GB2312//IGNORE', win_from_code = 'UTF-8//IGNORE')
     Iconv.iconv(win_to_code, win_from_code, str).first
   end
-  
+
+  # for gui config file
   def self.save_conf(options)
     File.open(options[:conf_path]) do |fr|
       buffer = fr.read
@@ -90,9 +91,9 @@ module Zhua
 
       open(song_path) do |f|
         f.each do |x|
-          music['title'] = $1 if x =~ /^<title>/ && x =~ /\[([^\[\]]+)\]/
+          music['title'] = $1.gsub('/', "--").strip if x =~ /^<title>/ && x =~ /\[([^\[\]]+)\]/
           music['loc'] = Loc.decode($1, debug)    if x =~ /^<location>(.*)<\/location>$/
-          music['album'] = $1 if x =~ /^<album_name>/ && x =~ /\[([^\[\]]+)\]/
+          music['album'] = $1.strip if x =~ /^<album_name>/ && x =~ /\[([^\[\]]+)\]/
 
           if x =~ /^<artist>(.*)<\/artist>$/
             tmp_data = $1
@@ -123,7 +124,7 @@ module Zhua
   end
 
 
-  def self.process_music(music, music_path, os, debug = false)
+  def self.process_music(music, music_path, os, debug = true)
     p "____________________--------------------" if debug
     title = music['title']
     p "title is " + title if debug
