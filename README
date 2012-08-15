@@ -1,1 +1,6 @@
 个人研究使用 不负责
+
+windows 需要安装
+rubyinstaller-1.8.7-p352.exe
+ActiveTcl8.5.10.1.295062-win32-ix86-threaded.exe
+wget.exe (位于external目录下请放置于默认运行path)
