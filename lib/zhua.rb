@@ -5,6 +5,7 @@ $:.unshift File.join(File.dirname(__FILE__),'..','gems/ruby-mp3info-0.6.15/lib')
 require 'mp3info'
 require 'escape'
 require 'iconv'
+require 'pry'
 
 module Zhua
 
@@ -19,9 +20,15 @@ module Zhua
         # tmp_path = tmp_path + (rand(1000) + rand(500)).to_s + File.basename(tg)[/\.\w+/, 0]
         tmp_path = "#{tmp_path}#{rand(1000)+rand(500)}#{File.basename(tg)[/\.\w+/, 0]}"
         puts "2 tmp_path is #{tmp_path}" if debug
+        
         # get_tg = Escape.shell_command([wget_cmd, "-c", tg, "-O", tmp_path])
-        get_tg = "#{wget_cmd} -c #{tg} -O #{tmp_path}"
-        puts "get_tg is #{get_tg}" if debug
+        option = '-c  --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)"'        
+        get_tg = "#{wget_cmd} -c #{option} #{tg} -O #{tmp_path}"
+        if debug
+          puts "+++++++download mp3+++++++++++++"
+          puts "get_tg is #{get_tg}"
+          puts "++++++++++++++++++++"          
+        end
         system(get_tg)        
         FileUtils.cp(tmp_path, path)
         FileUtils.rm tmp_path
@@ -85,10 +92,17 @@ module Zhua
       p music_path if debug
       url = "http://www.#{shrimp}.com/s" + "ong/play" + "list/i" + "d/#{aid}/type/#{type}";
       song_path = "#{music_path}song.xml"
-      system("#{wget_cmd} #{url} -O #{song_path}");
+      #wget -c  --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)" http://f1.xiami.net/23473/221825/01%201769528393_1314266.mp3
+      options = '-c  --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)"'
+      if debug
+        puts "++++++++++++++++++++"
+        puts "#{wget_cmd} #{options} #{url} -O #{song_path}"
+        puts "++++++++++++++++++++"
+      end
+      system("#{wget_cmd} #{options} #{url} -O #{song_path}");
       musics = []
       music = {}
-
+      binding.pry
       open(song_path) do |f|
         f.each do |x|
           music['title'] = $1.gsub('/', "--").strip if x =~ /^<title>/ && x =~ /\[([^\[\]]+)\]/
@@ -120,6 +134,7 @@ module Zhua
       end
     rescue
       p "xia error is #$!"
+      p "xia error is #{$!.backtrace.join("\n")}"      
     end      
   end
 
