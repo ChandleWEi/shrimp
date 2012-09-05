@@ -12,11 +12,11 @@ require 'iconv'
 module Zhua
 
   def self.crawl(path, tg, tmp_path, os, debug = false, wget_cmd = 'wget')
-    puts "++++++++++++++++++++crawl debug is #{debug}++++++++++++++++++"
+    puts "++++++++++++++++++++crawl debug is #{debug}++++++++++++++++++" if debug
     puts "tag is #{tg}" rescue nil if debug
     puts "tag class is #{tg.class}" rescue nil if debug
     option = '-c  --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)"'            
-    if ((File.size(path) < 1024)|| !(File.exist? path) )&& !tg.nil? && !tg.empty?
+    if ( !((File.exist? path) && (File.size(path) > 1024 ))  )&& !tg.nil? && !tg.empty?
       p "#self crawl path is " + path if debug
       p "os is " + os if debug
       if os == "windows"
@@ -153,7 +153,7 @@ module Zhua
 
 
   def self.process_music(music, music_path, os, debug = false)
-    puts "++++++++++++++++++++process_music debug is #{debug}++++++++++++++++++"    
+    puts "++++++++++++++++++++process_music debug is #{debug}++++++++++++++++++"    if debug
     p "____________________--------------------" if debug
     title = music['title']
     p "title is " + title if debug
@@ -194,7 +194,7 @@ module Zhua
     if os == 'windows'
       mp3_path = self.win_encode(mp3_path)
     end
-    puts "________________crawl debug is #{debug}____________"
+    puts "________________crawl debug is #{debug}____________" if debug
     self.crawl(mp3_path, loc, tmp_path, os, debug)
     
     # 获取图片
