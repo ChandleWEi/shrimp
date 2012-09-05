@@ -20,8 +20,9 @@ begin
   p "ARGV is #{ARGV}" if debug
   p "type is #{type}" if debug
   Zhua.xia(aid,  save_path, type, debug)
-rescue 
-  p "xm error is #$!"
+rescue => e
+   p "xm error is #$!"
+   p "xm error is #{$!.backtrace}"
 end
 
 

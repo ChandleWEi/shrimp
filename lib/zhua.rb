@@ -5,14 +5,18 @@ $:.unshift File.join(File.dirname(__FILE__),'..','gems/ruby-mp3info-0.6.15/lib')
 require 'mp3info'
 require 'escape'
 require 'iconv'
+require 'rubygems'
 require 'pry'
+
 
 module Zhua
 
-  def self.crawl(path, tg, tmp_path, os, wget_cmd = 'wget', debug = false)
+  def self.crawl(path, tg, tmp_path, os, debug = false, wget_cmd = 'wget')
+    puts "++++++++++++++++++++crawl debug is #{debug}++++++++++++++++++"
     puts "tag is #{tg}" rescue nil if debug
-    puts "tag class is #{tg.class}" rescue nil if debug    
-    if !(File.exist? path) && !tg.nil? && !tg.empty?
+    puts "tag class is #{tg.class}" rescue nil if debug
+    option = '-c  --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)"'            
+    if ((File.size(path) < 1024)|| !(File.exist? path) )&& !tg.nil? && !tg.empty?
       p "#self crawl path is " + path if debug
       p "os is " + os if debug
       if os == "windows"
@@ -22,8 +26,8 @@ module Zhua
         puts "2 tmp_path is #{tmp_path}" if debug
         
         # get_tg = Escape.shell_command([wget_cmd, "-c", tg, "-O", tmp_path])
-        option = '-c  --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)"'        
-        get_tg = "#{wget_cmd} -c #{option} #{tg} -O #{tmp_path}"
+
+        get_tg = "#{wget_cmd}  #{option} #{tg} -O #{tmp_path}"
         if debug
           puts "+++++++download mp3+++++++++++++"
           puts "get_tg is #{get_tg}"
@@ -32,9 +36,15 @@ module Zhua
         system(get_tg)        
         FileUtils.cp(tmp_path, path)
         FileUtils.rm tmp_path
-      else        
-        get_tg = Escape.shell_command([wget_cmd, "-c", tg, "-O", path])
-        p get_tg if debug
+      else
+        es_path = Escape.shell_command([path])
+        get_tg = "#{wget_cmd}  #{option} #{tg} -O #{es_path}"        
+
+        if debug
+          puts "+++++++download mp3+++++++++++++"          
+          p get_tg
+          puts "++++++++++++++++++++"
+         end
         system(get_tg)
       end
     end
@@ -91,18 +101,20 @@ module Zhua
       FileUtils.mkdir_p music_path unless File.exists? music_path
       p music_path if debug
       url = "http://www.#{shrimp}.com/s" + "ong/play" + "list/i" + "d/#{aid}/type/#{type}";
-      song_path = "#{music_path}song.xml"
+    song_path = "#{music_path}song.xml"
+    if File.exist? song_path
+      File.chmod(0755, song_path)
+      end
       #wget -c  --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)" http://f1.xiami.net/23473/221825/01%201769528393_1314266.mp3
-      options = '-c  --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)"'
+      option = '-c  --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)"'
       if debug
         puts "++++++++++++++++++++"
-        puts "#{wget_cmd} #{options} #{url} -O #{song_path}"
+        puts "#{wget_cmd} #{option} #{url} -O #{song_path}"
         puts "++++++++++++++++++++"
       end
-      system("#{wget_cmd} #{options} #{url} -O #{song_path}");
+      system("#{wget_cmd} #{option} #{url} -O #{song_path}");
       musics = []
       music = {}
-      binding.pry
       open(song_path) do |f|
         f.each do |x|
           music['title'] = $1.gsub('/', "--").strip if x =~ /^<title>/ && x =~ /\[([^\[\]]+)\]/
@@ -125,21 +137,23 @@ module Zhua
           next if music['album'].nil? || music['album'].empty? || music['artist'].nil? || music['artist'].empty?
 
           unless music['picurl'].nil?
-            self.process_music(music, music_path, os)          
+            self.process_music(music, music_path, os, debug)          
             # musics << music
             puts music if debug
             music = {}
           end
         end
       end
-    rescue
+    rescue => e
       p "xia error is #$!"
-      p "xia error is #{$!.backtrace.join("\n")}"      
+      p "xia error is #{$!.backtrace.join("\n")}"
+      # raise "zhua error is #{e}"
     end      
   end
 
 
-  def self.process_music(music, music_path, os, debug = true)
+  def self.process_music(music, music_path, os, debug = false)
+    puts "++++++++++++++++++++process_music debug is #{debug}++++++++++++++++++"    
     p "____________________--------------------" if debug
     title = music['title']
     p "title is " + title if debug
@@ -179,8 +193,9 @@ module Zhua
     mp3_path  = "#{album_path_orig}/#{title}.mp3"      
     if os == 'windows'
       mp3_path = self.win_encode(mp3_path)
-    end      
-    self.crawl(mp3_path, loc, tmp_path, os)
+    end
+    puts "________________crawl debug is #{debug}____________"
+    self.crawl(mp3_path, loc, tmp_path, os, debug)
     
     # 获取图片
     # img_path  = "#{album_path}/#{shellescape title}.jpg"
@@ -189,14 +204,14 @@ module Zhua
       img_path = self.win_encode(img_path)
     end
 
-    self.crawl(img_path, picurl, tmp_path, os)
+    self.crawl(img_path, picurl, tmp_path, os, debug)
     
     # 获取歌词
     lrc_path  = "#{album_path_orig}/#{title}.lrc"
     if os == 'windows'
       lrc_path = self.win_encode(lrc_path)
     end
-    self.crawl(lrc_path, lyric, tmp_path, os)      
+    self.crawl(lrc_path, lyric, tmp_path, os, debug)      
 
     puts  "mp3info now start update #{mp3_path}"
     puts "mp3_path is #{mp3_path}" if debug
