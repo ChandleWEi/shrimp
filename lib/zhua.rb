@@ -5,8 +5,8 @@ $:.unshift File.join(File.dirname(__FILE__),'..','gems/ruby-mp3info-0.6.15/lib')
 require 'mp3info'
 require 'escape'
 require 'iconv'
-require 'rubygems'
-require 'pry'
+# require 'rubygems'
+# require 'pry'
 
 
 module Zhua
